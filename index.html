@@ -4,13 +4,35 @@
     <title>Travel Decision Engine</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
+
   <body style="font-family: sans-serif; text-align:center; margin-top:40vh;">
+
     <h1>Travel Decision Engine</h1>
-    <button
-      style="font-size:24px; padding:20px;"
-      onclick="alert('Sto pensando a cosa farti fare 👀');"
-    >
+
+    <button style="font-size:24px; padding:20px;"
+      onclick="getLocation()">
       Cosa faccio ora?
     </button>
+
+    <script>
+      function getLocation() {
+        if (!navigator.geolocation) {
+          alert("Geolocalizzazione non supportata");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude.toFixed(5);
+            const lon = position.coords.longitude.toFixed(5);
+            alert("Sei qui:\nLat: " + lat + "\nLon: " + lon);
+          },
+          () => {
+            alert("Permesso posizione negato");
+          }
+        );
+      }
+    </script>
+
   </body>
 </html>
