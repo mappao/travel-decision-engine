@@ -9,6 +9,25 @@
 
     <h1>Travel Decision Engine</h1>
 
+    <div style="margin-bottom:20px; font-size:16px;">
+      <strong>I tuoi interessi:</strong><br>
+    
+      <label>
+        <input type="checkbox" id="culture">
+        Cultura / Musei
+      </label><br>
+    
+      <label>
+        <input type="checkbox" id="outdoor">
+        Outdoor / Passeggiate
+      </label><br>
+    
+      <label>
+        <input type="checkbox" id="noCrowds">
+        Preferisco evitare la folla
+      </label>
+    </div>
+    
     <button
       style="font-size:24px; padding:20px;"
       onclick="getLocation()">
@@ -18,12 +37,24 @@
     <p id="status" style="margin-top:30px; font-size:18px;"></p>
 
 <script>
+  function getUserProfile() {
+    return {
+      culture: document.getElementById("culture").checked,
+      outdoor: document.getElementById("outdoor").checked,
+      noCrowds: document.getElementById("noCrowds").checked
+    };
+  }
+   
   function getLocation() {
     const status = document.getElementById("status");
+
+    // Leggi il profilo utente dalla UI
+    const profile = getUserProfile();
+
     status.innerText = "Sto cercando la tua posizione...";
 
     if (!navigator.geolocation) {
-      status.innerText = "Geolocalizzazione non supportata";
+      status.innerText = "Geolocalizzazione non supportata dal browser";
       return;
     }
 
@@ -32,25 +63,42 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-    if (isInMilano(lat, lon)) {
-      getWeather(lat, lon).then(weather => {
-        const suggestions = getSuggestionsForMilano(weather);
-        const best = suggestions.sort((a, b) => b.score - a.score)[0];
-        showSuggestion(best, weather);
-      });
-    }
-    else {
+        // Controllo area supportata (Milano)
+        if (isInMilano(lat, lon)) {
+
+          // Recupero meteo reale
+          getWeather(lat, lon).then(weather => {
+
+            // Decision Engine: ritorna più suggerimenti
+            const suggestions = getSuggestionsForMilano(weather, profile);
+
+            // Ordina per score decrescente
+            const best = suggestions.sort(
+              (a, b) => b.score - a.score
+            )[0];
+
+            // Mostra il suggerimento scelto
+            showSuggestion(best, weather);
+
+          }).catch(() => {
+            status.innerText = "Errore nel recupero del meteo";
+          });
+
+        } else {
+          // Caso fuori Milano (UX gentile)
           status.innerHTML = `
             📍 Posizione rilevata<br><br>
             Lat: ${lat.toFixed(4)}<br>
             Lon: ${lon.toFixed(4)}<br><br>
-            ⚠️ Al momento so darti suggerimenti solo per <strong>Milano</strong>.
+            ⚠️ Al momento so darti suggerimenti solo per
+            <strong>Milano</strong>.
           `;
         }
       },
       (error) => {
         status.innerText =
-          "Errore geolocalizzazione (" + error.code + "): " +
+          "Errore geolocalizzazione (" +
+          error.code + "): " +
           error.message;
       }
     );
@@ -75,43 +123,43 @@
     return data.current_weather;
   }
 
-function getSuggestionsForMilano(weather) {
+function getSuggestionsForMilano(weather, profile) {
   const isRain =
     weather.weathercode >= 51 && weather.weathercode <= 67;
 
-    return [
-      {
-        title: "Museo del Novecento",
-        indoor: true,
-        score: 8 + (isRain ? 2 : 0),
-        reasons: [
-          "Centro città",
-          "Al coperto",
-          isRain ? "Ideale con la pioggia" : "Sempre valido"
-        ]
-      },
-      {
-        title: "Pinacoteca di Brera",
-        indoor: true,
-        score: 7 + (isRain ? 2 : 0),
-        reasons: [
-          "Arte classica",
-          "Ambiente tranquillo",
-          isRain ? "Ottima scelta con pioggia" : "Visita piacevole"
-        ]
-      },
-      {
-        title: "Passeggiata ai Navigli",
-        indoor: false,
-        score: 6 - (isRain ? 3 : 0),
-        reasons: [
-          "Atmosfera suggestiva",
-          "All’aperto",
-          isRain ? "Sconsigliata con pioggia" : "Perfetta con bel tempo"
-        ]
-      }
-    ];
-  }
+  return [
+    {
+      title: "Museo del Novecento",
+      indoor: true,
+      crowdRisk: "high",
+      score:
+        6 +
+        (profile.culture ? 3 : 0) +
+        (profile.noCrowds ? -2 : 0) +
+        (isRain ? 2 : 0),
+      reasons: [
+        "Esperienza culturale",
+        "Al coperto",
+        profile.noCrowds ? "Può essere affollato" : null,
+        isRain ? "Ottima scelta con pioggia" : null
+      ]
+    },
+    {
+      title: "Passeggiata ai Navigli",
+      indoor: false,
+      crowdRisk: "medium",
+      score:
+        5 +
+        (profile.outdoor ? 3 : 0) -
+        (isRain ? 3 : 0),
+      reasons: [
+        "Atmosfera rilassata",
+        "All’aperto",
+        isRain ? "Meno ideale con pioggia" : "Perfetta con bel tempo"
+      ]
+    }
+  ];
+}
   
 function showSuggestion(suggestion, weather) {
   const status = document.getElementById("status");
