@@ -35,13 +35,16 @@
         // Milano (approssimato)
         if (isInMilano(lat, lon)) {
           showSuggestion();
-        } else {
-          status.innerText =
-            "Sei fuori Milano (Lat: " +
-            lat.toFixed(4) +
-            ", Lon: " +
-            lon.toFixed(4) +
-            ")";
+        } 
+        else {
+          status.innerHTML = `
+            📍 Posizione rilevata<br><br>
+            Lat: ${lat.toFixed(4)}<br>
+            Lon: ${lon.toFixed(4)}<br><br>
+        
+            ⚠️ Al momento so darti suggerimenti solo per <strong>Milano</strong>.<br>
+            Quando sarai lì, ti dirò cosa fare 😊
+          `;
         }
       },
       (error) => {
