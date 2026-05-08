@@ -33,8 +33,9 @@
         const lon = position.coords.longitude;
 
         if (isInMilano(lat, lon)) {
-          const suggestion = getSuggestionForMilano();
-          showSuggestion(suggestion);
+          const suggestions = getSuggestionsForMilano();
+          const best = suggestions.sort((a, b) => b.score - a.score)[0];
+          showSuggestion(best);
         } else {
           status.innerHTML = `
             📍 Posizione rilevata<br><br>
@@ -59,17 +60,38 @@
     );
   }
 
-  // 👇 QUESTO È IL TUO PRIMO DECISION ENGINE
-  function getSuggestionForMilano() {
-    return {
+function getSuggestionsForMilano() {
+  return [
+    {
       title: "Museo del Novecento",
+      score: 8,
       reasons: [
-        "È in linea con interessi culturali",
-        "È al coperto",
-        "Si visita bene in 1–2 ore"
+        "Centro città",
+        "Al coperto",
+        "Perfetto per 1–2 ore"
       ]
-    };
-  }
+    },
+    {
+      title: "Pinacoteca di Brera",
+      score: 7,
+      reasons: [
+        "Arte classica",
+        "Zona piacevole",
+        "Visita più lunga"
+      ]
+    },
+    {
+      title: "Passeggiata ai Navigli",
+      score: 5,
+      reasons: [
+        "All’aperto",
+        "Piacevole al tramonto",
+        "Meglio con bel tempo"
+      ]
+    }
+  ];
+}
+
 
   function showSuggestion(suggestion) {
     const status = document.getElementById("status");
