@@ -117,7 +117,9 @@ function showSuggestion(suggestion, weather) {
   const status = document.getElementById("status");
   status.innerHTML = `
     📍 Sei a <strong>Milano</strong><br>
-    🌦️ Meteo: ${weather.temperature}°C<br><br>
+    🌦️ Meteo attuale: ${weather.temperature}°C
+    <br><small>(aggiornato alle ${new Date().toLocaleTimeString()})</small>
+    <br><br>
 
     ✅ <strong>Suggerimento ora:</strong><br>
     <em>${suggestion.title}</em><br><br>
