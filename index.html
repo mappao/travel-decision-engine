@@ -32,23 +32,21 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // Milano (approssimato)
         if (isInMilano(lat, lon)) {
-          showSuggestion();
+          const suggestion = getSuggestionForMilano();
+          showSuggestion(suggestion);
         } else {
-          status.innerText =
-            "Sei fuori Milano (Lat: " +
-            lat.toFixed(4) +
-            ", Lon: " +
-            lon.toFixed(4) +
-            ")";
+          status.innerHTML = `
+            📍 Posizione rilevata<br><br>
+            Lat: ${lat.toFixed(4)}<br>
+            Lon: ${lon.toFixed(4)}<br><br>
+            ⚠️ Al momento so darti suggerimenti solo per <strong>Milano</strong>.
+          `;
         }
       },
       (error) => {
         status.innerText =
-          "Errore geolocalizzazione (" +
-          error.code +
-          "): " +
+          "Errore geolocalizzazione (" + error.code + "): " +
           error.message;
       }
     );
@@ -61,16 +59,26 @@
     );
   }
 
-  function showSuggestion() {
+  // 👇 QUESTO È IL TUO PRIMO DECISION ENGINE
+  function getSuggestionForMilano() {
+    return {
+      title: "Museo del Novecento",
+      reasons: [
+        "È in linea con interessi culturali",
+        "È al coperto",
+        "Si visita bene in 1–2 ore"
+      ]
+    };
+  }
+
+  function showSuggestion(suggestion) {
     const status = document.getElementById("status");
     status.innerHTML = `
       📍 Sei a <strong>Milano</strong><br><br>
       ✅ <strong>Suggerimento ora:</strong><br>
-      Vai al <em>Museo del Novecento</em><br>
+      <em>${suggestion.title}</em><br><br>
       <small>
-        • Vicino al centro<br>
-        • Al coperto<br>
-        • Adatto a 1–2 ore
+        ${suggestion.reasons.map(r => "• " + r).join("<br>")}
       </small>
     `;
   }
