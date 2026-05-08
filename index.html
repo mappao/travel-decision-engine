@@ -17,30 +17,64 @@
 
     <p id="status" style="margin-top:30px; font-size:18px;"></p>
 
-    <script>
-      function getLocation() {
-        const status = document.getElementById("status");
-        status.innerText = "Sto cercando la tua posizione...";
+<script>
+  function getLocation() {
+    const status = document.getElementById("status");
+    status.innerText = "Sto cercando la tua posizione...";
 
-        if (!navigator.geolocation) {
-          status.innerText = "Geolocalizzazione non supportata";
-          return;
+    if (!navigator.geolocation) {
+      status.innerText = "Geolocalizzazione non supportata";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        // Milano (approssimato)
+        if (isInMilano(lat, lon)) {
+          showSuggestion();
+        } else {
+          status.innerText =
+            "Sei fuori Milano (Lat: " +
+            lat.toFixed(4) +
+            ", Lon: " +
+            lon.toFixed(4) +
+            ")";
         }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude.toFixed(5);
-            const lon = position.coords.longitude.toFixed(5);
-            status.innerText = "Sei qui:\nLat: " + lat + " | Lon: " + lon;
-          },
-          (error) => {
-            status.innerText =
-              "Errore geolocalizzazione (" + error.code + "): " +
-              error.message;
-          }
-        );
+      },
+      (error) => {
+        status.innerText =
+          "Errore geolocalizzazione (" +
+          error.code +
+          "): " +
+          error.message;
       }
-    </script>
+    );
+  }
+
+  function isInMilano(lat, lon) {
+    return (
+      lat > 45.40 && lat < 45.55 &&
+      lon > 9.10  && lon < 9.30
+    );
+  }
+
+  function showSuggestion() {
+    const status = document.getElementById("status");
+    status.innerHTML = `
+      📍 Sei a <strong>Milano</strong><br><br>
+      ✅ <strong>Suggerimento ora:</strong><br>
+      Vai al <em>Museo del Novecento</em><br>
+      <small>
+        • Vicino al centro<br>
+        • Al coperto<br>
+        • Adatto a 1–2 ore
+      </small>
+    `;
+  }
+</script>
 
   </body>
 </html>
