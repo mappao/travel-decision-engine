@@ -5,19 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
 
-  <body style="font-family: sans-serif; text-align:center; margin-top:40vh;">
+  <body style="font-family: sans-serif; text-align:center; margin-top:30vh;">
 
     <h1>Travel Decision Engine</h1>
 
-    <button style="font-size:24px; padding:20px;"
+    <button
+      style="font-size:24px; padding:20px;"
       onclick="getLocation()">
       Cosa faccio ora?
     </button>
 
+    <p id="status" style="margin-top:30px; font-size:18px;"></p>
+
     <script>
       function getLocation() {
+        const status = document.getElementById("status");
+        status.innerText = "Sto cercando la tua posizione...";
+
         if (!navigator.geolocation) {
-          alert("Geolocalizzazione non supportata");
+          status.innerText = "Geolocalizzazione non supportata";
           return;
         }
 
@@ -25,10 +31,12 @@
           (position) => {
             const lat = position.coords.latitude.toFixed(5);
             const lon = position.coords.longitude.toFixed(5);
-            alert("Sei qui:\nLat: " + lat + "\nLon: " + lon);
+            status.innerText = "Sei qui:\nLat: " + lat + " | Lon: " + lon;
           },
-          () => {
-            alert("Permesso posizione negato");
+          (error) => {
+            status.innerText =
+              "Errore geolocalizzazione (" + error.code + "): " +
+              error.message;
           }
         );
       }
