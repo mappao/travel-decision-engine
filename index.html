@@ -32,11 +32,14 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        if (isInMilano(lat, lon)) {
-          const suggestions = getSuggestionsForMilano();
-          const best = suggestions.sort((a, b) => b.score - a.score)[0];
-          showSuggestion(best);
-        } else {
+    if (isInMilano(lat, lon)) {
+      getWeather(lat, lon).then(weather => {
+        const suggestions = getSuggestionsForMilano(weather);
+        const best = suggestions.sort((a, b) => b.score - a.score)[0];
+        showSuggestion(best, weather);
+      });
+    }
+    else {
           status.innerHTML = `
             📍 Posizione rilevata<br><br>
             Lat: ${lat.toFixed(4)}<br>
@@ -60,50 +63,69 @@
     );
   }
 
-function getSuggestionsForMilano() {
-  return [
-    {
-      title: "Museo del Novecento",
-      score: 8,
-      reasons: [
-        "Centro città",
-        "Al coperto",
-        "Perfetto per 1–2 ore"
-      ]
-    },
-    {
-      title: "Pinacoteca di Brera",
-      score: 7,
-      reasons: [
-        "Arte classica",
-        "Zona piacevole",
-        "Visita più lunga"
-      ]
-    },
-    {
-      title: "Passeggiata ai Navigli",
-      score: 5,
-      reasons: [
-        "All’aperto",
-        "Piacevole al tramonto",
-        "Meglio con bel tempo"
-      ]
-    }
-  ];
-}
+  async function getWeather(lat, lon) {
+    const url =
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}&longitude=${lon}` +
+      `&current_weather=true`;
 
+    const response = await fetch(url);
+    const data = await response.json();
 
-  function showSuggestion(suggestion) {
-    const status = document.getElementById("status");
-    status.innerHTML = `
-      📍 Sei a <strong>Milano</strong><br><br>
-      ✅ <strong>Suggerimento ora:</strong><br>
-      <em>${suggestion.title}</em><br><br>
-      <small>
-        ${suggestion.reasons.map(r => "• " + r).join("<br>")}
-      </small>
-    `;
+    return data.current_weather;
   }
-</script>
+
+function getSuggestionsForMilano(weather) {
+  const isRain =
+    weather.weathercode >= 51 && weather.weathercode <= 67;
+
+    return [
+      {
+        title: "Museo del Novecento",
+        indoor: true,
+        score: 8 + (isRain ? 2 : 0),
+        reasons: [
+          "Centro città",
+          "Al coperto",
+          isRain ? "Ideale con la pioggia" : "Sempre valido"
+        ]
+      },
+      {
+        title: "Pinacoteca di Brera",
+        indoor: true,
+        score: 7 + (isRain ? 2 : 0),
+        reasons: [
+          "Arte classica",
+          "Ambiente tranquillo",
+          isRain ? "Ottima scelta con pioggia" : "Visita piacevole"
+        ]
+      },
+      {
+        title: "Passeggiata ai Navigli",
+        indoor: false,
+        score: 6 - (isRain ? 3 : 0),
+        reasons: [
+          "Atmosfera suggestiva",
+          "All’aperto",
+          isRain ? "Sconsigliata con pioggia" : "Perfetta con bel tempo"
+        ]
+      }
+    ];
+  }
+  
+function showSuggestion(suggestion, weather) {
+  const status = document.getElementById("status");
+  status.innerHTML = `
+    📍 Sei a <strong>Milano</strong><br>
+    🌦️ Meteo: ${weather.temperature}°C<br><br>
+
+    ✅ <strong>Suggerimento ora:</strong><br>
+    <em>${suggestion.title}</em><br><br>
+
+    <small>
+      ${suggestion.reasons.map(r => "• " + r).join("<br>")}
+    </small>
+  `;
+}</script>
   </body>
 </html>
